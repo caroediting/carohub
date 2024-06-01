@@ -1,0 +1,430 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caro's Editing Blog</title>
+<style>
+    /* Technologic Hologram Style */
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #00172b; /* Dark blue background */
+    color: #66aaff; /* Pale blue color */
+}
+
+/* Header styles */
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #00172b; /* Dark blue background */
+}
+
+/* Title styles */
+h1 {
+    color: #ffffff; /* White color */
+}
+
+/* Menu styles */
+#menu-bar {
+    background-color: #00172b; /* Dark blue background */
+    padding: 10px 0;
+    text-align: center;
+}
+
+#menu-bar a {
+    color: #3399ff; /* Vibrant blue color */
+    text-decoration: none;
+    margin: 0 20px;
+    font-size: 18px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+#menu-bar a:hover {
+    color: #66ccff; /* Lighter vibrant blue color */
+}
+
+/* Content container */
+#content-container {
+    padding: 20px;
+}
+
+/* Post container */
+.post-container {
+    background-color: #00172b; /* Dark blue background */
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    border: 2px solid #66aaff; /* Pale blue color */
+}
+
+/* Post title */
+.post-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Post content */
+.post-content {
+    font-size: 18px;
+    line-height: 1.5;
+    color: #b3e0ff; /* Lighter blue color */
+}
+
+/* Form styles */
+form {
+    background-color: #00172b; /* Dark blue background */
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #66aaff; /* Pale blue color */
+    margin-top: 20px;
+}
+/* Chat title styles */
+#chat-title {
+    text-align: center;
+    color: #ffffff; /* White color */
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Added style for yapping session */
+#yapping-session {
+    text-align: center;
+    color: #ffffff; /* White color */
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+input[type="text"], button {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: #3399ff; /* Flashy blue color */
+    color: #00172b; /* Dark blue background */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+input[type="text"] {
+    width: calc(100% - 80px);
+    margin-right: 10px;
+}
+
+input[type="text"]:focus, button:focus {
+    outline: none;
+}
+
+button:hover {
+    background-color: #66ccff; /* Lighter flashy blue color */
+}
+
+/* Footer styles */
+footer {
+    text-align: center;
+    background-color: #00172b; /* Dark blue background */
+    padding: 20px;
+    color: #66aaff; /* Pale blue color */
+}
+
+
+</style>
+</head>
+<body>
+<header>
+    <h1>Caro's Editing Blog</h1>
+</header>
+
+<!-- Menu Bar -->
+<div id="menu-bar">
+    <a href="#" id="home-link">Home</a>
+    <a href="#" id="turkish-dramas-link">Turkish Dramas</a>
+    <a href="#" id="audios-link">Audios</a>
+</div>
+
+<!-- Category Selection -->
+<div id="posts-container">
+    <select id="category-select">
+        <option value="all-posts">All Posts</option>
+        <option value="audios">Audios</option>
+        <option value="turkish-dramas">Turkish Dramas</option>
+        <!-- Add other categories if needed -->
+    </select>
+
+    <!-- Container for posts -->
+    <div id="posts"></div>
+
+    <form id="post-form">
+        <input type="text" id="post-content" placeholder="Write something...">
+        <input type="file" id="post-file">
+        <button type="submit">Post</button>
+    </form>
+</div>
+
+<!-- Chat Container -->
+<div id="chat-container" style="display:none;">
+    <h2 id="yapping-session">Yapping Session</h2> <!-- Added title -->
+    <div id="chat-messages">
+        <!-- Chat messages will appear here -->
+    </div>
+    <form id="chat-form">
+        <input type="text" id="chat-input" placeholder="Type a message...">
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+<script>
+    
+    const postForm = document.getElementById('post-form');
+    const postsContainer = document.getElementById('posts');
+    const categorySelect = document.getElementById('category-select');
+    const chatContainer = document.getElementById('chat-container');
+    const homeLink = document.getElementById('home-link');
+    const turkishDramasLink = document.getElementById('turkish-dramas-link');
+    const chatForm = document.getElementById('chat-form');
+    const chatMessages = document.getElementById('chat-messages');
+    
+
+    // Load posts from local storage
+    window.addEventListener('load', function() {
+        loadPosts();
+        categorySelect.dispatchEvent(new Event('change'));
+    });
+
+    // Save post to local storage
+    function savePost(postData) {
+        const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+        savedPosts.unshift(postData);
+        localStorage.setItem('posts', JSON.stringify(savedPosts));
+    }
+
+    postForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const postContent = document.getElementById('post-content').value;
+        const postFile = document.getElementById('post-file').files[0];
+        const selectedCategory = categorySelect.value;
+
+        if (postContent.trim() === '' && !postFile) {
+            alert('Please enter some content or select a file.');
+            return;
+        }
+
+        const postData = {
+            id: Date.now(),
+            content: postContent,
+            fileType: postFile ? postFile.type : null,
+            fileUrl: postFile ? URL.createObjectURL(postFile) : null,
+            category: selectedCategory,
+            comments: []
+        };
+
+        savePost(postData);
+        createPostElement(postData);
+
+        // Clear form fields
+        document.getElementById('post-content').value = '';
+        document.getElementById('post-file').value = '';
+    });
+
+    function createPostElement(postData) {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
+        postElement.setAttribute('data-category', postData.category);
+        postElement.setAttribute('data-id', postData.id);
+
+        // Display text content if provided
+        if (postData.content.trim() !== '') {
+            const contentElement = document.createElement('p');
+            contentElement.textContent = postData.content;
+            postElement.appendChild(contentElement);
+        }
+
+        // Display file if provided
+        if (postData.fileType) {
+            if (postData.fileType.startsWith('video')) {
+                const fileElement = document.createElement('video');
+                fileElement.src = postData.fileUrl;
+                fileElement.controls = true;
+                postElement.appendChild(fileElement);
+            } else if (postData.fileType.startsWith('audio')) {
+                const fileElement = document.createElement('audio');
+                fileElement.src = postData.fileUrl;
+                fileElement.controls = true;
+                postElement.appendChild(fileElement);
+            } else {
+                const fileElement = document.createElement('img');
+                fileElement.src = postData.fileUrl;
+                fileElement.style.maxWidth = '100%';
+                postElement.appendChild(fileElement);
+            }
+        }
+
+        // Add delete button for posts
+        const deletePostButton = document.createElement('button');
+        deletePostButton.textContent = 'Delete Post';
+        deletePostButton.addEventListener('click', function() {
+            // Remove the post from the DOM
+            postsContainer.removeChild(postElement);
+            // Remove the post from local storage
+            const savedPosts = JSON.parse(localStorage.getItem('posts'));
+            const postIndex = savedPosts.findIndex(p => p.id === postData.id);
+            if (postIndex !== -1) {
+                savedPosts.splice(postIndex, 1);
+                localStorage.setItem('posts', JSON.stringify(savedPosts));
+            }
+        });
+        postElement.appendChild(deletePostButton);
+
+        // Add comment section
+        const commentForm = document.createElement('form');
+        const commentInput = document.createElement('input');
+        commentInput.setAttribute('type', 'text');
+        commentInput.setAttribute('placeholder', 'Write a comment...');
+        commentForm.appendChild(commentInput);
+
+        const commentButton = document.createElement('button');
+        commentButton.setAttribute('type', 'submit');
+        commentButton.textContent = 'Comment';
+        commentForm.appendChild(commentButton);
+
+        const commentsContainer = document.createElement('div');
+        commentsContainer.classList.add('comments-container');
+
+        postData.comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+            commentElement.textContent = comment.text;
+
+            // Add delete button for comments
+            const deleteCommentButton = document.createElement('button');
+            deleteCommentButton.textContent = 'Delete Comment';
+            deleteCommentButton.addEventListener('click', function() {
+                // Remove the comment from the DOM
+                commentsContainer.removeChild(commentElement);
+                // Remove the comment from the post data
+                const commentIndex = postData.comments.findIndex(c => c.id === comment.id);
+                if (commentIndex !== -1) {
+                    postData.comments.splice(commentIndex, 1);
+                    // Update local storage
+                    const savedPosts = JSON.parse(localStorage.getItem('posts'));
+                    const postIndex = savedPosts.findIndex(p => p.id === postData.id);
+                    if (postIndex !== -1) {
+                        savedPosts[postIndex] = postData;
+                        localStorage.setItem('posts', JSON.stringify(savedPosts));
+                    }
+                }
+            });
+            commentElement.appendChild(deleteCommentButton);
+
+            commentsContainer.appendChild(commentElement);
+        });
+
+        commentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const commentText = commentInput.value.trim();
+            if (commentText === '') return;
+
+            const commentData = {
+                id: Date.now(),
+                text: commentText
+            };
+
+            postData.comments.push(commentData);
+            savePostData(postData);
+
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+            commentElement.textContent = commentText;
+
+            // Add delete button for comments
+            const deleteCommentButton = document.createElement('button');
+            deleteCommentButton.textContent = 'Delete Comment';
+            deleteCommentButton.addEventListener('click', function() {
+                commentsContainer.removeChild(commentElement);
+                const commentIndex = postData.comments.findIndex(c => c.id === commentData.id);
+                if (commentIndex !== -1) {
+                    postData.comments.splice(commentIndex, 1);
+                    const savedPosts = JSON.parse(localStorage.getItem('posts'));
+                    const postIndex = savedPosts.findIndex(p => p.id === postData.id);
+                    if (postIndex !== -1) {
+                        savedPosts[postIndex] = postData;
+                        localStorage.setItem('posts', JSON.stringify(savedPosts));
+                    }
+                }
+            });
+            commentElement.appendChild(deleteCommentButton);
+
+            commentsContainer.appendChild(commentElement);
+            commentInput.value = '';
+        });
+
+        postElement.appendChild(commentsContainer);
+        postElement.appendChild(commentForm);
+        postsContainer.appendChild(postElement);
+    }
+
+    function loadPosts() {
+        const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+        savedPosts.forEach(createPostElement);
+    }
+
+    function savePostData(postData) {
+        const savedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+        const postIndex = savedPosts.findIndex(p => p.id === postData.id);
+        if (postIndex !== -1) {
+            savedPosts[postIndex] = postData;
+        } else {
+            savedPosts.unshift(postData);
+        }
+        localStorage.setItem('posts', JSON.stringify(savedPosts));
+    }
+
+    // Filter posts by category
+    categorySelect.addEventListener('change', function() {
+        const selectedCategory = categorySelect.value;
+        const posts = document.querySelectorAll('.post');
+        posts.forEach(post => {
+            if (selectedCategory === 'all-posts' || post.getAttribute('data-category') === selectedCategory) {
+                post.style.display = '';
+            } else {
+                post.style.display = 'none';
+            }
+        });
+    });
+
+    // Navigation between Home and Turkish Dramas sections
+    homeLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        postsContainer.style.display = 'block';
+        chatContainer.style.display = 'none';
+    });
+
+    turkishDramasLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        postsContainer.style.display = 'none';
+        chatContainer.style.display = 'block';
+    });
+
+    // Chat functionality
+    chatForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const chatInput = document.getElementById('chat-input').value.trim();
+        if (chatInput === '') return;
+
+        const chatMessage = document.createElement('div');
+        chatMessage.classList.add('chat-message');
+        chatMessage.textContent = chatInput;
+
+        chatMessages.appendChild(chatMessage);
+        document.getElementById('chat-input').value = '';
+    });
+</script>
+</body>
+</html>
